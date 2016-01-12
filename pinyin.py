@@ -1,69 +1,49 @@
 # coding=utf-8
 # char codes ref from: http://www.math.nus.edu.sg/aslaksen/read.shtml
+import re
 
-TONES = { "1a":"&#257;", "2a":"&#225;", "3a":"&#462;", "4a":"&#224;", 
-		  "1e":"&#275;", "2e":"&#233;", "3e":"&#283;", "4e":"&#232;", 
-		  "1i":"&#299;", "2i":"&#237;", "3i":"&#464;", "4i":"&#236;",
-		  "1o":"&#333;", "2o":"&#243;", "3o":"&#466;", "4o":"&#242",
-		  "1u":"&#363;", "2u":"&#250;", "3u":"&#468;", "4u":"&#249;",
-		  "1v":"&#470;", "2v":"&#472;", "3v":"&#474;", "4v":"&#476;" }
-		  # using v for the umlauded u
+#from http://stackoverflow.com/questions/8200349/convert-numbered-pinyin-to-pinyin-with-tone-marks
+PinyinToneMark = {
+    0: "aoeiuv\u00fc",
+    1: "\u0101\u014d\u0113\u012b\u016b\u01d6\u01d6",
+    2: "\u00e1\u00f3\u00e9\u00ed\u00fa\u01d8\u01d8",
+    3: "\u01ce\u01d2\u011b\u01d0\u01d4\u01da\u01da",
+    4: "\u00e0\u00f2\u00e8\u00ec\u00f9\u01dc\u01dc",
+}
 
-def convert(s):
-	word_list = []
-	ret_string = ""
-	tmp = ""
-	# split the string by spaces
-	words = s.split(" ")
-	
-	# "zhong1 guo2" -> [ ['1', 'zhong'], ['2', 'guo'] ]
-	for word in words:
-		word_list.append([word[len(word)-1], word[0:len(word)-1]])
-		
-	# do the searchy stuff
-	for word in word_list:
-		tone = word[0]
-		pinyin = word[1].lower()
-		
-		if tone == "5" or pinyin == "":
-			break
-		
-		if pinyin.find("a") > -1:
-			tmp = pinyin.replace("a", TONES[tone+"a"])
-			
-		elif pinyin.find("e") > -1:
-			tmp = pinyin.replace("e", TONES[tone+"e"])
-			
-		elif pinyin.find("ou") > -1:
-			tmp = pinyin.replace("o", TONES[tone+"o"]+"u")
-			
-		elif pinyin.find("io") > -1:
-			tmp = pinyin.replace("io", "i"+TONES[tone+"o"])
-		
-		elif pinyin.find("iu") > -1:
-			tmp = pinyin.replace("iu", "i"+TONES[tone+"u"])
-			
-		elif pinyin.find("ui") > -1:
-			tmp = pinyin.replace("ui", "u"+TONES[tone+"i"])
-			
-		elif pinyin.find("uo") > -1:
-			tmp = pinyin.replace("uo", "u"+TONES[tone+"o"])
-			
-		elif pinyin.find("i") > -1:
-			tmp = pinyin.replace("i", TONES[tone+"i"])
-		
-		elif pinyin.find("o") > -1:
-			tmp = pinyin.replace("o", TONES[tone+"o"])
-			
-		elif pinyin.find("u:") > -1:
-			tmp = pinyin.replace("u:", TONES[tone+"v"])
-			
-		elif pinyin.find("u") > -1:
-			tmp = pinyin.replace("u", TONES[tone + "u"])
-			
-		else:
-			tmp = pinyin
-		
-		ret_string += tmp + " "
-
-	return ret_string
+def decode_pinyin(s):
+    s = s.lower()
+    r = ""
+    t = ""
+    for c in s:
+        if c >= 'a' and c <= 'z':
+            t += c
+        elif c == ':':
+            assert t[-1] == 'u'
+            t = t[:-1] + "\u00fc"
+        else:
+            if c >= '0' and c <= '5':
+                tone = int(c) % 5
+                if tone != 0:
+                    m = re.search("[aoeiuv\u00fc]+", t)
+                    if m is None:
+                        t += c
+                    elif len(m.group(0)) == 1:
+                        t = t[:m.start(0)] + PinyinToneMark[tone][PinyinToneMark[0].index(m.group(0))] + t[m.end(0):]
+                    else:
+                        if 'a' in t:
+                            t = t.replace("a", PinyinToneMark[tone][0])
+                        elif 'o' in t:
+                            t = t.replace("o", PinyinToneMark[tone][1])
+                        elif 'e' in t:
+                            t = t.replace("e", PinyinToneMark[tone][2])
+                        elif t.endswith("ui"):
+                            t = t.replace("i", PinyinToneMark[tone][3])
+                        elif t.endswith("iu"):
+                            t = t.replace("u", PinyinToneMark[tone][4])
+                        else:
+                            t += "!"
+            r += t
+            t = ""
+    r += t
+    return r
