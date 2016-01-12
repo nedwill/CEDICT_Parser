@@ -1,7 +1,3 @@
-# coding=utf-8
-# the above line is necessary to tell python what kind of encoding we're working with
-# see: http://www.python.org/dev/peps/pep-0263/
-
 from pinyin import *
 
 def write_file(file_name, dic):
@@ -19,7 +15,7 @@ def write_file(file_name, dic):
 			new_file.write(" \"" + item["pinyin"] + "|" + item["def"] + "\",")
 			new_file.write('\n')
 		except:
-			print "Something went wrong"
+			print("Something went wrong")
 	
 	new_file.write("\n")
 	new_file.write("\t}")
@@ -60,4 +56,4 @@ def read_file(file_name):
 	
 	write_file("CH_DIC.js", items)
 		
-read_file("cedict_ts.u8")
+read_file("cedict_1_0_ts_utf-8_mdbg.txt")
