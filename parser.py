@@ -74,13 +74,33 @@ def main():
 		assert args.word_numbers is not None
 		format_anki(args.word_numbers)
 
-webcore = open('webcore', 'r').read()
+webcore = open('webcore', 'r').read() + open('webcore_done', 'r').read()
+
 d = simp_to_pinyin_dict()
+#d['？'] = {'pin': '?', 'trad': '?'}
+
+d2 = {}
+for ch in webcore:
+	if ch in d:
+		assert(d[ch]['simp'] == ch)
+		trad = d[ch]['trad']
+		if trad == ch:
+			continue
+		d2[trad] = ch
+
+for k, v in d2.items():
+	print("{}\t{}".format(k, v))
+
+exit()
+
 for line in webcore.splitlines():
 	if line == "":
 		print(line)
 		continue
+	#print(line)
 	simp, defn = line.split("\t")
+	simp = simp.strip()
+	defn = defn.strip()
 	if simp not in d:
 		#print("[*] Warning: {} not found, constructing pinyin from constituent characters.".format(simp))
 		pin = "".join(d[c]['pin'] for c in simp)
@@ -89,7 +109,7 @@ for line in webcore.splitlines():
 		pin = d[simp]['pin']
 		trad = d[simp]['trad']
 
-	print("\t".join((simp, trad, pin, defn)))
+	print("\t".join((trad, simp)))
 
 	#print(line)
 
